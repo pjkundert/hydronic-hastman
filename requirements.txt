@@ -1,0 +1,3 @@
+git+git://github.com/pjkundert/hydronic.git@feature-cleanup#egg=hydronic
+cpppo
+
