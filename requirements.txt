@@ -1,3 +1,3 @@
-git+git://github.com/pjkundert/hydronic.git@feature-cleanup#egg=hydronic
-cpppo
-
+# Private repo; run: git config url."git@github.com:".insteadOf git://github.com/
+hydronic	@ git+git://github.com/pjkundert/hydronic.git@feature-cleanup#egg=hydronic
+cpppo		@ git+https://github.com/pjkundert/cpppo.git@feature-pro#egg=cpppo

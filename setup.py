@@ -10,25 +10,22 @@ exec( open( 'version.py', 'r' ).read() )
 install_requires		= open( os.path.join( here, "requirements.txt" )).readlines()
 
 setup(
-    name			= "hydronic-greenpro",
+    name			= "hydronic-hastman",
     version			= __version__,
     tests_require		= [ "pytest" ],
     install_requires		= install_requires,
     packages			= [ 
-        "hydronic_greenpro",
+        "hydronic_hastman",
     ],
     package_dir			= {
-        "hydronic_greenpro":	".",
+        "hydronic_hastman":	".",
     },
     include_package_data	= True,
     author			= "Perry Kundert",
-    author_email		= "perry@hardconsulting.com",
-    description			= "GreenPro Hydronic Simulator",
+    author_email		= "perry@dominionrn.com",
+    description			= "Hydronic Simulator",
     long_description		= """\
-Computing comfort levels and controlling multiple interconnected radiant zones
-is challenging.  Support the computation of surface radiant temperatures using a
-few physical sensors, to produce multiple synthetic sensors estimating air and radiant
-temperatures.
+Modelling Darcy's Battery Cabinet.
 """,
     license			= "Dual License; GPLv3 and Proprietary",
     keywords			= "hydronic Fanger comfort heat flow",
