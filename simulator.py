@@ -6,6 +6,8 @@ from __future__ import division
 
 import copy
 import curses, curses.ascii, curses.panel
+import itertools
+import functools
 import logging
 import math
 import optparse
@@ -26,6 +28,8 @@ log_cfg['level']		= logging.INFO
 logging.basicConfig( **log_cfg )
 
 structure			= dotdict()
+
+sensor				= {}
 
 # Temperature setpoints (and initial space temperatures), PID loop controllers, etc.
 temp				= {}
@@ -150,7 +154,7 @@ for fo,ts in wall.items():
     typ,siz			= ts    # ( '8"', ( 59., 9.5 ))
     logging.info( "Wall   %10s <-> %-10s: %-6s, %-12s (%.2fft^2)" % ( frm, out, typ, dimension( siz ), area( siz )))
     # Track down any windows/doors to the same space, and net them out of siz...
-    for nn,s in door.items() + window.items():
+    for nn,s in itertools.chain( door.items(), window.items() ):
         if nn[0] == frm and out == 'world':
             siz			= ( siz[0] - s[0]*s[1]/siz[1], siz[1] )
             logging.info( "  - %12s (%.2fft^2) ==> %-12ss (%.2fft^2)" % ( nn[1], area( s ), dimension( siz ), area( siz )))
@@ -160,8 +164,11 @@ for fo,ts in wall.items():
 # specify it all (we'll only fill in an attic roof for missing sized spaces).  We don't include any
 # 'joist' roofs here, because they are actually heated floor zones, too...
 
-for du,ts in roof.items() + [((k,'world'),('SIP4',size[k])) for k in size.keys()
-                             if k not in [ d for d,u in roof.keys() ]]:
+for du,ts in itertools.chain(
+        roof.items(),
+        [((k,'world'),('SIP4',size[k])) for k in size.keys()
+         if k not in [ d for d,u in roof.keys() ]]
+):
     dn,up			= du					# ( 'upstairs', 'world' )
     typ,siz			= ts                                    # ( 'attic', ( 9.333, 39.333 ))
     siz				= ( siz[0], siz[1] )			# tidy up any with extra z dimensions
@@ -423,7 +430,7 @@ def ui( win, cnf ):
             threading.active_count(),
             ', '.join( [ t.name for t in threading.enumerate() ] )))
 
-    include.sort( cmp = by_zone )
+    include.sort( key = functools.cmp_to_key( by_zone ))
     input		= 0
     delta		= 0.0
     while not cnf['stop']:
@@ -628,7 +635,7 @@ def ui( win, cnf ):
             # degree-minutes per hour, which we can compute, and would be a
             # consistent measure of energy over time for each zone.
             k			= ( z, 'hydronic', 'pumps' )
-            if not adjusted.has_key( k ):
+            if k not in adjusted:
                 adjusted[k]	= 0.
             adjusted[k]        += misc.scale( cntrl[z][1].value,
                                               interval['normal'], interval['BTU'] ) * delta / 60 / 60
@@ -830,7 +837,7 @@ def ui( win, cnf ):
             # (from heat gain/loss from all adjoining spaces), and the measurement.  This will give
             # us some idea of the error in our thermodynamic model...
             t			= temp['']
-            if temp.has_key( s ):
+            if s in temp:
                 t		= temp[s]
             if s == include[selected]:
                 win.attron(curses.A_REVERSE);
@@ -951,11 +958,11 @@ def ui( win, cnf ):
             r                  += 1
             sn			= s.name.replace( include[selected], 'slab' )
             zn			= s.name.replace( include[selected], 'zone' )
-            if sn and sn != s and spaces.has_key( sn ):
+            if sn and sn != s and sn in spaces:
                 message( winsel, 15 * ' ' + "%-12s % 4.1fC" % ( sn, F_to_C( spaces[sn].conditions.temperature )),
                          col = 2, row = r, clear = False )
                 r              += 1
-            if zn and zn != s and spaces.has_key( zn ):
+            if zn and zn != s and zn in spaces:
                 message( winsel, 15 * ' ' + "%-12s % 4.1fC" % ( zn, F_to_C( spaces[zn].conditions.temperature )),
                          col = 2, row = r, clear = False )
                 r              += 1
@@ -995,6 +1002,8 @@ def txtgui( cnf ):
         stdscr.keypad( 1 )
 
         ui( stdscr, cnf )               # Enter the mainloop
+    except KeyboardInterrupt:
+        pass
     except:
         failure			= traceback.format_exc()
     finally:
